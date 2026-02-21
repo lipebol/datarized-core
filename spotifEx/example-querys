@@ -64,7 +64,7 @@ query {
 ====================================================================
 
 query {
-  spotifExDaylists(date: "2025-*") {
+  spotifExDaylists(date: "2025-*", info: true, lookup: true, arrow: true) {
     ...on spotifExDaylists {
       data {
         track {
@@ -76,8 +76,8 @@ query {
               name
               album_type
               release_date
-              available_markets
-              no_available_markets
+              # available_markets
+              # no_available_markets
               external_url
               images {
                 url
@@ -121,6 +121,18 @@ query {
         listen
       }
     }
+    
+    ...on Arrow {
+      message
+      object
+      presigned
+    }
+
+    ...on Info {
+      total
+      pages
+      columns
+    }
 
     ...on Errors {
       error
@@ -129,3 +141,12 @@ query {
     }
   }
 }
+
+
+
+curl --request POST \
+  --url http://localhost/api/v2/graphql \
+  --header 'Content-Type: application/json' \
+  --data '{
+    "query": "query { spotifExDaylists(date: \"2025-12-30\", lookup: true, arrow: true) { ...on spotifExDaylists { data { track { trackid name album { ...on spotifExAlbumFields { albumid name album_type release_date external_url images { url width height } total_tracks copyrights { text type } label } } artists { ...on spotifExArtistFields { artistid name profile followers images { url width height } genres { name about } } } url duration_ms popularity explicit track_number disc_number isrc } date listen } } ...on Info { total pages columns } ...on Errors { error message status_code } } }"
+  }'
