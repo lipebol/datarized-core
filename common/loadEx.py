@@ -8,8 +8,7 @@ from logging import basicConfig, info, INFO
 from os import environ, getenv, path, remove
 from pathlib import Path
 import platform
-from pyarrow import csv as arrowcsv
-from pyarrow import dataset as arrowdataset
+import pyarrow as arrow
 from pytz import timezone
 from string import Template
 from subprocess import run, PIPE
@@ -132,19 +131,27 @@ class load:
     @staticmethod
     def readcsv(csv_file: str, fields: list, types: dict, sep=None) -> object:
         load.info(f"Reading file... ({csv_file})")
-        return arrowcsv.read_csv(
-            csv_file, parse_options=arrowcsv.ParseOptions(delimiter=sep if sep else ';'),
-            read_options=arrowcsv.ReadOptions(
+        return arrow.csv.read_csv(
+            csv_file, parse_options=arrow.csv.ParseOptions(delimiter=sep if sep else ';'),
+            read_options=arrow.csv.ReadOptions(
                 encoding='latin1', column_names=fields, skip_rows=1
-            ), convert_options=arrowcsv.ConvertOptions(column_types=types)
+            ), convert_options=arrow.csv.ConvertOptions(column_types=types)
         )
 
     @staticmethod
-    def dataset(datafile, *, types: list, typefile: str, fs: object):
+    def dataset(
+        datafile, *, typefile: str, fs: object, 
+        types: list | None = None, batch: bool = False
+    ):
         load.info(f"Reading file... ({datafile})")
-        return arrowdataset.dataset(
-            datafile, schema=types, format=typefile, filesystem=fs
-        )
+        if (
+            dataset := arrow.dataset.dataset(
+                datafile, schema=types, format=typefile, filesystem=fs
+            )
+        ):
+            if batch:
+                return
+            return dataset.to_table() 
 
     @staticmethod
     def tmpfile(*, path: str, filename: str | None = None) -> str:
