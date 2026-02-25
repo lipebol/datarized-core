@@ -9,6 +9,7 @@ from os import environ, getenv, path, remove
 from pathlib import Path
 import platform
 import pyarrow as arrow
+import pyarrow.dataset as arrow_dataset
 from pytz import timezone
 from string import Template
 from subprocess import run, PIPE
@@ -145,7 +146,7 @@ class load:
     ):
         load.info(f"Reading file... ({datafile})")
         if (
-            dataset := arrow.dataset.dataset(
+            dataset := arrow_dataset.dataset(
                 datafile, schema=types, format=typefile, filesystem=fs
             )
         ):
