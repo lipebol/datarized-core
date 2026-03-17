@@ -5,7 +5,7 @@ from pyarrow import flight
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
 
-class auth:
+class Authentic:
     
     def __google(self, _auth: str | None, _scope: str | None) -> object:
         return service_account.Credentials.from_service_account_info(
