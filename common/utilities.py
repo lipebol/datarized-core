@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 from zipfile import ZipFile
 
 
-class load:
+class use:
 
     load_dotenv()
 
