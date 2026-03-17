@@ -5,7 +5,7 @@ from inspect import currentframe
 from traceback import format_exc
 
 
-class notific:
+class Notific:
 
     @staticmethod
     def exception(func):
