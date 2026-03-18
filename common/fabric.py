@@ -62,7 +62,7 @@ class Event:
     visibility: str = field(default="public")
 
 
-class mount:
+class Make:
 
     @property
     def __classes(self):
