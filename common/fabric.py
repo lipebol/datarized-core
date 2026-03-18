@@ -1,4 +1,4 @@
-from .loadEx import load
+from .utilize import Use
 from dataclasses import asdict, dataclass, field
 from inspect import getmembers, isclass, signature
 from pyarrow import _flight
@@ -50,7 +50,7 @@ class Arrow_Flight_RPC:
 @dataclass
 class Event_Date:
     dateTime: str
-    timeZone: str = field(default=load.timezone_default())
+    timeZone: str = field(default=Use.timezone_default())
 
 @dataclass
 class Event:
@@ -69,7 +69,7 @@ class Make:
         for classname in [
             classname for classname, classdesc in getmembers(
                 modules[__name__], isclass
-            ) if load.path(__file__).name.strip('.py') in str(classdesc) 
+            ) if Use.path(__file__).name.strip('.py') in str(classdesc)
             and classname != self.__class__.__name__
         ]:
             if (params := signature(globals()[classname].__init__).parameters):
@@ -83,9 +83,9 @@ class Make:
     @staticmethod
     def data(*, classname: str | None = None, **kwargs):
         if not classname:
-            for classEx in mount().__classes:
-                if list(classEx.values())[0] == list(kwargs.keys()):
-                    classname = ''.join(classEx.keys())
+            for classes in Make().__classes:
+                if list(classes.values())[0] == list(kwargs.keys()):
+                    classname = ''.join(classes.keys())
                     break
         if (data := globals()[classname](**kwargs)):
             if 'Arrow_Flight' in classname:
