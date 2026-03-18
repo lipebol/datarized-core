@@ -1,32 +1,29 @@
-from .loadEx import load, system
-from .httpEx import httpEx
-from .mountEx import mount
-from pyarrow import flight
+from .utilize import Use
+from .fabric import Make
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
+from pyarrow import flight
+from urllib.parse import urlparse
 
-class Authentic:
+class Auth:
     
     @staticmethod
-    def GCPService(
+    def gcp_service(
         *, name: str, version: str, _auth: str | None = None, 
         _scope: str | None = None, _authkey: str | None = None,
     ) -> object:
         if _auth and _scope:
             _auth = service_account.Credentials.from_service_account_info(
-                load.jsonEx(data=system.decr(variable=_auth), to_objectpy=True), 
-                scopes=[system.decr(variable=_scope)]
+                Use.jsonific(data=Use.decr(variable=_auth), to_objectpy=True), 
+                scopes=[Use.decr(variable=_scope)]
             )
         elif _authkey:
-            _authkey = system.decr(variable=_authkey)
-        return build(
-            name, version, developerKey=_authkey, 
-            credentials=_auth, cache_discovery=False
-        )
+            _authkey = Use.decr(variable=_authkey)
+        return build(name, version, developerKey=_authkey, credentials=_auth, cache_discovery=False)
 
     @staticmethod
-    def arrowflightrpc(uri: str, **kwargs):
-        if (uri := load.uri(system.decr(value=uri))) and (
+    def arrow_flight_rpc(uri: str, **kwargs):
+        if (uri := urlparse(Use.decr(value=uri))) and (
             client := flight.FlightClient(f"{uri.scheme}://{uri.hostname}:{uri.port}")
         ) and (
             authenticate := flight.FlightCallOptions(
@@ -37,45 +34,41 @@ class Authentic:
                 info := client.get_flight_info(
                     descriptor.for_command(
                         command if (command := kwargs.get('query'))
-                        else (
-                            command := load.string(
-                                kwargs, template=load.variable('SELECT_ALL')
-                            )
-                        )
+                        else (command := Use.stringific(kwargs, template=Use.variable('SELECT_ALL')))
                     ), authenticate
                 )
             ) and (
-                mountinfo := mount.data(
+                make_info := Make.data(
                     schema=info.schema, rows=info.total_records,
                     size=info.total_bytes, ticket=flight.Ticket(command)
                 )
             ):
                 if info.endpoints:
                     for endpoint in info.endpoints:
-                        mountinfo.ticket = endpoint.ticket
-                        mountinfo.expiration_time = endpoint.expiration_time
+                        make_info.ticket = endpoint.ticket
+                        make_info.expiration_time = endpoint.expiration_time
                 
                 if kwargs.get('info'):
-                    return mountinfo
+                    return make_info
 
-                arrowflightrpcdata = mount.data(
-                    info=mountinfo, conn=mount.data(
+                arrow_flight_rpc_data = Make.data(
+                    info=make_info, conn=Make.data(
                         client=client, authenticate=authenticate, descriptor=descriptor
-                    ), extras=mount.data(classname='Arrow_Flight_RPC_Extras')
+                    ), extras=Make.data(classname='Arrow_Flight_RPC_Extras')
                 )
 
                 if kwargs.get('insert_command'):
-                    arrowflightrpcdata.extras.command = load.string(
+                    arrow_flight_rpc_data.extras.command = Use.stringific(
                         {
                             **kwargs,
-                            'cols': load.string((cols := info.schema.names), join=True),
-                            'values': load.string(['?'] * len(cols), join=True),
-                        }, template=load.variable('INSERT_ALL')
+                            'cols': Use.stringific((cols := info.schema.names), join=True),
+                            'values': Use.stringific(['?'] * len(cols), join=True),
+                        }, template=Use.variable('INSERT_ALL')
                     )
                 elif kwargs.get('insert_path'):
-                    arrowflightrpcdata.extras.path = load.string(
-                        kwargs, template=load.variable('FOR_PATH')
+                    arrow_flight_rpc_data.extras.path = Use.stringific(
+                        kwargs, template=Use.variable('FOR_PATH')
                     )
                     
-                return arrowflightrpcdata
+                return arrow_flight_rpc_data
         raise Exception('')
