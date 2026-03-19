@@ -2,8 +2,8 @@ from .authEx import auth
 from .loadEx import load, system
 from .notifEx import notific
 import adbc_driver_postgresql.dbapi
+from pyarrow import Table
 from pymongo import MongoClient
-from pymongoarrow.monkey import patch_all
 
 
 class ClickHouse:
@@ -76,52 +76,54 @@ class PostgreSQL:
     @staticmethod
     def __connect(database: str | None):
         return adbc_driver_postgresql.dbapi.connect(
-            system.decr(value=load.variable('POSTGRESQL_URI')) % 
-            {'db': config.getdbname(database)}, autocommit=True
+            system.decr(value=load.variable('POSTGRESQL_URI'))
+            .replace('postgres', PostgreSQL.getdbname(database)), autocommit=True
         ).cursor()
 
     @staticmethod
-    def select(
-        schema: str, *,  table: str, params: str = '', 
-        database: str | None = None
-    ):
-        if schema and table:
+    def select(*, database: str | None = None, **kwargs):
+        if (schema := kwargs.get('schema')) and kwargs.get('table') or kwargs.get('query'):
             with PostgreSQL.__connect(database) as conn:
-                conn.execute(load.variable('SELECT_ALL') % (f"{schema}.{table}",params))
+                if (query := kwargs.get('query')):
+                  conn.execute(query)
+                else:
+                    conn.execute(
+                        load.string(
+                            {'default': schema, **kwargs}, template=load.variable('SELECT_ALL')
+                        )
+                    )
                 return conn.fetch_arrow_table()
+        raise Exception('The "schema" and "table" or "query" was not declared.')
 
     @staticmethod
-    def insert(
-        schema: str, *, table: str, data: object,
-        return_id: bool = True, database: str | None = None
-    ):
-        if data and schema and table:
-            if 'pyarrow.lib.Table' not in str(type(data)):
+    def insert(*, database: str | None = None, **kwargs):
+        if (data := kwargs.get('data')) and (
+            schemadb := kwargs.get('schemadb')
+        ) and (table := kwargs.get('table')):
+            if not isinstance(data, Table):
                 data, rows = data.to_batches(), data.count_rows()
             else:
                 rows = data.num_rows
             with PostgreSQL.__connect(database) as conn:
                 conn.adbc_ingest(
-                    db_schema_name=schema, table_name=table, 
-                    data=data, mode='append'
+                    db_schema_name=schemadb, table_name=table, data=data, mode='append'
                 )
-            load.info(f"Inserted {rows} rows in {schema}.{table}")
-            if return_id:
-                return PostgreSQL.select(
-                    schema, table=table, 
-                    params="WHERE id IN (%s)" % ",".join(
-                        [f"'{id}'" for id in data.select(["id"]).to_pydict()['id']]
-                    )
-                )
-            return None
-        load.info("No data was found to insert.")
+            load.info(f"Inserted {rows} rows in {schemadb}.{table}")
+            return
+        raise Exception('The "data" and "schemadb" and "table" was not declared.')
 
     @staticmethod
-    def columns(schema: str, *, table: str, database: str | None = None) -> list:
-        if schema and table:
+    def columns(*, database: str | None = None, **kwargs) -> list:
+        if (schema := kwargs.get('schema')) and kwargs.get('table'):
             with PostgreSQL.__connect(database) as conn:
-                conn.execute(load.variable('SELECT_ALL') % (schema,table,''))
-                return [column[0] for column in conn.description]
+                conn.adbc_execute_schema(
+                    load.string(
+                        {'default': schema, **kwargs},
+                        template=load.variable('SELECT_LIMIT')
+                    )
+                )
+            return 
+        raise Exception('The "schema" and "table" was not declared.')
 
     @staticmethod
     def sizedb(target: str, *, database: str | None = None):
@@ -138,8 +140,6 @@ class PostgreSQL:
 
 class MongoDB:
 
-    patch_all()
-
     @staticmethod
     def setconfig(database: str | None = None):
         config.setdbname('MONGODB_DB', database)
@@ -153,9 +153,11 @@ class MongoDB:
 
     @staticmethod
     def connect(database: str, collection: str):
-        return MongoClient(
-            system.decr(value=load.variable('MONGODB_URI'))
-        ).get_database(MongoDB.getdbname(database)).get_collection(collection)
+        if 'mongodb' not in (uri := load.variable('MONGODB_URI')):
+            uri = system.decr(value=uri)
+        return MongoClient(uri).get_database(
+            MongoDB.getdbname(database)
+        ).get_collection(collection)
 
     @staticmethod
     def select(
@@ -163,9 +165,8 @@ class MongoDB:
         filter: dict = {}, fields: dict = {}, _id: bool = False
     ) -> list:
         _db = MongoDB.connect(database, collection)
-        if not filter:
-            if (data := _db.find_arrow_all({})):
-                return data.drop_columns('_id') if not _id else data
+        if not _id:
+            fields['_id'] = 0
         return list(_db.find(filter, fields))
 
     @staticmethod
@@ -188,7 +189,6 @@ class config:
         if database:
             return load.variable(env, add=database)
 
-    @notific.exception
     @staticmethod
     def envs():
         if load.checkpath(tmpfile := load.tmpfile(path='/tmp')):
@@ -197,7 +197,7 @@ class config:
                     raise Exception(error)
             else:
                 return envs
-        if (dataenv := MongoDB.select('_envs', database='common').to_pylist()):
+        if (dataenv := MongoDB.select('_envs', database='common')):
             load.jsonEx(path=tmpfile, data=dataenv[0])
             return list(load.envs())
         raise Exception('Error load envs.')
