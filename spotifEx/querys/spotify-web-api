@@ -1,0 +1,61 @@
+query {
+  SpotifyWebAPI(trackid: "1SUFlHg5Gg2DFqDe08SoC0") {
+    ...on spotifExTrackId { id }
+    ...on spotifExTrackFields {
+      trackid
+      name
+      album {
+        ...on spotifExAlbumId { id }
+        ...on spotifExAlbumFields {
+          albumid
+          name
+          album_type
+          release_date
+          external_url
+          images {
+            url
+            width
+            height
+          }
+          total_tracks
+          copyrights {
+            text
+            type
+          }
+          label
+        }
+      }
+      artists {
+        ...on spotifExArtistId { id }
+        ...on spotifExArtistFields {
+          artistid
+          name
+          profile
+          followers
+          images {
+            url
+            width
+            height
+          }
+          genres {
+            name
+            about
+          }
+        }
+      }
+      url
+      duration_ms
+      popularity
+      explicit
+      track_number
+      disc_number
+      isrc
+    }
+
+    ...on Errors {
+      error
+      message
+      status_code
+    }
+  }
+}

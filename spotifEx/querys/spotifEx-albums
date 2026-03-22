@@ -1,0 +1,41 @@
+query {
+  spotifExAlbums(
+    albumid: "00EgcNA6EQiT1rXNFCZiNb", 
+    lookup: true
+  ) {
+    ...on spotifExAlbums {
+      data {
+        albumid
+        name
+        album_type
+        release_date
+        available_markets {
+          name
+          code
+        }
+        no_available_markets {
+          name
+          code
+        }
+        external_url
+        images {
+          url
+          width
+          height
+        }
+        total_tracks
+        copyrights {
+          text
+          type
+        }
+        label
+      }
+    }
+    
+    ...on Errors {
+      error
+      message
+      status_code
+    }
+  }
+}

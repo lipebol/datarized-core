@@ -1,0 +1,30 @@
+query {
+  spotifExArtists(
+    artistid: "1EswPCHgI3tydeJlDVMEFl|2NSMsMCNZzqNA1jlVO9M9t|6BhoGzrwRr9eELLBJ55ldo",
+    lookup: true
+  ) {
+    ...on spotifExArtists {
+      data {
+        artistid
+        name
+        profile
+        followers
+        images {
+          url
+          width
+          height
+        }
+        genres {
+          name
+          about
+        }
+      }
+    }
+
+    ...on Errors {
+      error
+      message
+      status_code
+    }
+  }
+}

@@ -1,0 +1,76 @@
+query {
+  spotifExDaylists(date: "2025-*", lookup: true, arrow: true, info: true) {
+    ...on spotifExDaylists {
+      data {
+        track {
+          trackid
+          name
+          album {
+            ...on spotifExAlbumFields {
+              albumid
+              name
+              album_type
+              release_date
+              external_url
+              images {
+                url
+                width
+                height
+              }
+              total_tracks
+              copyrights {
+                text
+                type
+              }
+              label
+            }
+          }
+          artists {
+            ...on spotifExArtistFields {
+              artistid
+              name
+              profile
+              followers
+              images {
+                url
+                width
+                height
+              }
+              genres {
+                name
+                about
+              }
+            }
+          }
+          url
+          duration_ms
+          popularity
+          explicit
+          track_number
+          disc_number
+          isrc
+        }
+        date
+        listen
+      }
+    }
+    
+    ...on Arrow {
+      message
+      object
+      presigned
+    }
+
+    ...on Info {
+      total
+      pages
+      columns
+    }
+
+    ...on Errors {
+      error
+      message
+      status_code
+    }
+  }
+}
