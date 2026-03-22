@@ -1,6 +1,5 @@
-from .authEx import auth
-from .loadEx import load, system
-from .notifEx import notific
+from .authentic import Auth
+from .utilize import Use
 import adbc_driver_postgresql.dbapi
 from pyarrow import Table
 from pymongo import MongoClient
@@ -15,7 +14,7 @@ class ClickHouse:
 
     @staticmethod
     def getdbname(database: str | None) -> str:
-        if (database := database or load.variable('CLICKHOUSE_DB')):
+        if (database := database or Use.variable('CLICKHOUSE_DB')):
             return database
         raise Exception('The database was not declared.')
 
@@ -25,7 +24,7 @@ class ClickHouse:
             raise Exception('Choose one of the two methods: "query" or "table".')
         elif kwargs.get('table'):
             kwargs['default'] = ClickHouse.getdbname(database) ### <-- to env 'SELECT_ALL'
-        return auth.arrowflightrpc(load.variable('CLICKHOUSE_URI'), **kwargs)
+        return Auth.arrow_flight_rpc(Use.variable('CLICKHOUSE_URI'), **kwargs)
         
     @staticmethod
     def select(*, database: str | None = None, **kwargs):
@@ -69,14 +68,14 @@ class PostgreSQL:
 
     @staticmethod
     def getdbname(database: str | None) -> str:
-        if (database := database or load.variable('POSTGRESQL_DB')):
+        if (database := database or Use.variable('POSTGRESQL_DB')):
             return database
         raise Exception('The database was not declared.')
 
     @staticmethod
     def __connect(database: str | None):
         return adbc_driver_postgresql.dbapi.connect(
-            system.decr(value=load.variable('POSTGRESQL_URI'))
+            system.decr(value=Use.variable('POSTGRESQL_URI'))
             .replace('postgres', PostgreSQL.getdbname(database)), autocommit=True
         ).cursor()
 
@@ -88,8 +87,9 @@ class PostgreSQL:
                   conn.execute(query)
                 else:
                     conn.execute(
-                        load.string(
-                            {'default': schema, **kwargs}, template=load.variable('SELECT_ALL')
+                        Use.stringific(
+                            {'default': schema, **kwargs}, 
+                            template=Use.variable('SELECT_ALL')
                         )
                     )
                 return conn.fetch_arrow_table()
@@ -117,9 +117,9 @@ class PostgreSQL:
         if (schema := kwargs.get('schema')) and kwargs.get('table'):
             with PostgreSQL.__connect(database) as conn:
                 conn.adbc_execute_schema(
-                    load.string(
+                    Use.stringific(
                         {'default': schema, **kwargs},
-                        template=load.variable('SELECT_LIMIT')
+                        template=Use.variable('SELECT_LIMIT')
                     )
                 )
             return 
@@ -129,9 +129,9 @@ class PostgreSQL:
     def sizedb(target: str, *, database: str | None = None):
         if len((target := target.lower().split())) == 2:
             with PostgreSQL.__connect(database) as conn:
-                conn.execute(load.variable('SIZEDB') % PostgreSQL.getdbname(database))
+                conn.execute(Use.variable('SIZEDB') % PostgreSQL.getdbname(database))
                 if (sizedb := "".join(conn.fetchone()).lower().split()):
-                    load.info(sizedb)
+                    Use.info(sizedb)
                     if target[1] == sizedb[1] and int(target[0]) <= int(sizedb[0]):
                         raise Exception('The specified target was hit.')
                 return True
@@ -141,20 +141,20 @@ class PostgreSQL:
 class MongoDB:
 
     @staticmethod
-    def setconfig(database: str | None = None):
-        config.setdbname('MONGODB_DB', database)
+    def setconfig():
+        config.setdbname('MONGODB_DB', Use.variable('DATARIZED_CORE_NAME'))
         return config.envs()
 
     @staticmethod
     def getdbname(database: str | None) -> str:
-        if (database := database or load.variable('MONGODB_DB')):
+        if (database := database or Use.variable('MONGODB_DB')):
             return database
         raise Exception('The database was not declared.')
 
     @staticmethod
     def connect(database: str, collection: str):
-        if 'mongodb' not in (uri := load.variable('MONGODB_URI')):
-            uri = system.decr(value=uri)
+        if 'mongodb' not in (uri := Use.variable('MONGODB_URI')):
+            uri = Use.decr(value=uri)
         return MongoClient(uri).get_database(
             MongoDB.getdbname(database)
         ).get_collection(collection)
@@ -174,10 +174,7 @@ class MongoDB:
         return MongoDB.connect(database, collection).update_many(filter, { '$set' : update})
 
     @staticmethod
-    def insert(
-        collection: str, *, database: str | None = None, 
-        data: dict, many: bool = False
-    ):
+    def insert(collection: str, *, database: str | None = None, data: dict, many: bool = False):
         if not many:
             return MongoDB.connect(database, collection).insert_one(data).inserted_id
     
@@ -187,17 +184,17 @@ class config:
     @staticmethod
     def setdbname(env: str, database: str | None) -> list:
         if database:
-            return load.variable(env, add=database)
+            return Use.variable(env, add=database)
 
     @staticmethod
     def envs():
-        if load.checkpath(tmpfile := load.tmpfile(path='/tmp')):
-            if not (envs := list(load.envs())):
-                if load.checkpath(tmpfile):
+        if Use.checkpath(tmpfile := Use.tmpfile(path='/tmp')):
+            if not (envs := list(Use.envs())):
+                if Use.checkpath(tmpfile):
                     raise Exception(error)
             else:
                 return envs
         if (dataenv := MongoDB.select('_envs', database='common')):
-            load.jsonEx(path=tmpfile, data=dataenv[0])
-            return list(load.envs())
+            Use.jsonific(path=tmpfile, data=dataenv[0])
+            return list(Use.envs())
         raise Exception('Error load envs.')
