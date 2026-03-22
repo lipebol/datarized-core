@@ -33,7 +33,7 @@ class Use:
     @quiet
     @staticmethod
     def info(_info: str) -> str:
-        return info(_info)
+        return info(f'{Use.variable('DATARIZED_CORE_NAME')} {_info}')
 
     @staticmethod
     def envs():
@@ -41,7 +41,8 @@ class Use:
             for key, value in Use.jsonific(path=(tmpfile := Use.tmpfile(path='/tmp'))).items():
                 if isinstance(value, str):
                     yield Use.variable(key, add=value)
-        except Exception:
+        except Exception as error:
+            Use.info(error)
             remove(tmpfile)
             return False
 
