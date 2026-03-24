@@ -92,7 +92,6 @@ class init:
             return init.daylist(track)
         Use.info(error)
 
-    @Notific.exception
     @staticmethod
     async def run(trackid: str):
         if MongoDB.setconfig():
@@ -111,5 +110,3 @@ if __name__ == '__main__':
             Use.info(f'v1 ({trackid})')
     except KeyboardInterrupt:
         Use.info('Exit.')
-    except Exception as error:
-        Notific.alert(message=error)
