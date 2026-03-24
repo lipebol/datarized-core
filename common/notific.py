@@ -8,21 +8,19 @@ from traceback import format_exc
 class Notific:
 
     @staticmethod
-    def exception(func):
-        def wrapper(*args, **kwargs):
-            try:
-                return func(*args, **kwargs)
-            except Exception as error:
-                try:
-                    Notific.alert(
-                        title='Notific', message=Notific.event(
-                            summary=f"Notific ({type(error).__name__})", 
-                            description=format_exc(), colorId='11'
-                        ).get('kind')
-                    )
-                except Exception as error:
-                    Notific.alert(title='Notific', message=format_exc())
-        return wrapper
+    def exception(error):
+        try:
+            Notific.alert(
+                title=(name := Use.variable('DATARIZED_CORE_NAME')),
+                message=Notific.event(
+                    summary=f"{name} ({type(error).__name__})",
+                    description=format_exc(), colorId='11'
+                ).get('kind')
+            )
+            return (error := {'error': error})
+        except Exception:
+            Notific.alert(title='Notific', message=format_exc())
+            return error
     
     @staticmethod
     def event(
