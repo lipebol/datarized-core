@@ -1,29 +1,18 @@
 from aiohttp import ClientSession, ClientTimeout
 from common.utilize import Use
+from common.notific import Notific
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 
 class WebAPI:
 
     @staticmethod
-    def access(func):
-        async def wrapper(trackid: str):
-            async with Client(
-                transport=AIOHTTPTransport(
-                    url='http://localhost/api/v2/graphql/', 
-                    headers={
-                        'Content-Type': 'application/json', 
-                        'AuthExternal': await WebAPI.token()
-                    }, client_session_args={'timeout': ClientTimeout(total=300)}
-                )
-            ) as session:
-                track = await session.execute(
-                    gql(WebAPI.query(**{'arg': trackid.split('/')[-1]}))
-                )
-            if not (track := track.get('SpotifyWebAPI')):
-                raise Exception('There was probably an error during the track search.')
-            return func(track)
-        return wrapper
+    def access(func_or_trackid):
+        if callable(func_or_trackid):
+            async def wrapper(trackid: str):
+                return func_or_trackid(await WebAPI.get_data(trackid))
+            return wrapper
+        return WebAPI.get_data(func_or_trackid)
 
     @staticmethod
     async def token():
@@ -57,6 +46,27 @@ class WebAPI:
             Use.jsonific(path=tmpfile, data=tmpfile_data)
             Use.envs()
         return spotify_web_api_token
+
+    @staticmethod
+    async def get_data(trackid: str):
+        async with Client(
+            transport=AIOHTTPTransport(
+                url='http://localhost/api/v2/graphql/',
+                headers={
+                    'Content-Type': 'application/json',
+                    'AuthExternal': await WebAPI.token()
+                }, client_session_args={'timeout': ClientTimeout(total=300)}
+            )
+        ) as session:
+            try:
+                track = await session.execute(
+                    gql(WebAPI.query(**{'arg': trackid.split('/')[-1]}))
+                )
+                if not (track := track.get('SpotifyWebAPI')):
+                    raise Exception('There was probably an error during the track search.')
+                return track
+            except Exception as error:
+                return Notific.exception(error)
 
     @staticmethod
     def query(**kwargs):
