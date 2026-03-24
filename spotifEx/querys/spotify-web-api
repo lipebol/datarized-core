@@ -1,5 +1,5 @@
 query {
-  SpotifyWebAPI(trackid: "1SUFlHg5Gg2DFqDe08SoC0") {
+  SpotifyWebAPI(trackid: "$arg") {
     ...on spotifExTrackId { id }
     ...on spotifExTrackFields {
       trackid

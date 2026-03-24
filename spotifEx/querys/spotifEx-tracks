@@ -1,6 +1,6 @@
 query {
   spotifExTracks(
-    trackid: "1SUFlHg5Gg2DFqDe08SoC0", 
+    trackid: "$arg",
     lookup: true
   ) {
     ...on spotifExTracks {
