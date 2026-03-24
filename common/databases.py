@@ -9,8 +9,8 @@ class ClickHouse:
 
     @staticmethod
     def setconfig(database: str | None = None):
-        config.setdbname('CLICKHOUSE_DB', database)
-        return config.envs()
+        Config.setdbname('CLICKHOUSE_DB', database)
+        return Config.envs()
 
     @staticmethod
     def getdbname(database: str | None) -> str:
@@ -63,8 +63,8 @@ class PostgreSQL:
 
     @staticmethod
     def setconfig(database: str | None = None):
-        config.setdbname('POSTGRESQL_DB', database)
-        return config.envs()
+        Config.setdbname('POSTGRESQL_DB', database)
+        return Config.envs()
 
     @staticmethod
     def getdbname(database: str | None) -> str:
@@ -142,8 +142,8 @@ class MongoDB:
 
     @staticmethod
     def setconfig():
-        config.setdbname('MONGODB_DB', Use.variable('DATARIZED_CORE_NAME'))
-        return config.envs()
+        Config.setdbname('MONGODB_DB', Use.variable('DATARIZED_CORE_NAME'))
+        return Config.envs()
 
     @staticmethod
     def getdbname(database: str | None) -> str:
@@ -179,7 +179,7 @@ class MongoDB:
             return MongoDB.connect(database, collection).insert_one(data).inserted_id
     
 
-class config:
+class Config:
 
     @staticmethod
     def setdbname(env: str, database: str | None) -> list:
