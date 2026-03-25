@@ -1,6 +1,7 @@
 from aiohttp import ClientSession, ClientTimeout
 from common.utilize import Use
 from common.notific import Notific
+from fsspec.implementations.http import HTTPFileSystem
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 
@@ -60,7 +61,7 @@ class WebAPI:
         ) as session:
             try:
                 track = await session.execute(
-                    gql(WebAPI.query(**{'arg': trackid.split('/')[-1]}))
+                    gql(WebAPI.set_query(Use.variable('SPOTIFY_WEB_API_QUERY'), trackid))
                 )
                 if not (track := track.get('SpotifyWebAPI')):
                     raise Exception('There was probably an error during the track search.')
@@ -69,69 +70,16 @@ class WebAPI:
                 return Notific.exception(error)
 
     @staticmethod
-    def query(**kwargs):
-        return Use.stringific(
-            kwargs, template="""
-            query {
-                SpotifyWebAPI(trackid: "$arg") {
-                    ...on spotifExTrackId { id }
-                    ...on spotifExTrackFields {
-                        trackid
-                        name
-                        album {
-                            ...on spotifExAlbumId { id }
-                            ...on spotifExAlbumFields {
-                                albumid
-                                name
-                                album_type
-                                release_date
-                                external_url
-                                images {
-                                    url
-                                    width
-                                    height
-                                }
-                                total_tracks
-                                copyrights {
-                                    text
-                                    type
-                                }
-                                label
-                            }
-                        }
-                        artists {
-                            ...on spotifExArtistId { id }
-                            ...on spotifExArtistFields {
-                                artistid
-                                name
-                                profile
-                                followers
-                                images {
-                                    url
-                                    width
-                                    height
-                                }
-                                genres {
-                                    name
-                                    about
-                                }
-                            }
-                        }
-                        url
-                        duration_ms
-                        popularity
-                        explicit
-                        track_number
-                        disc_number
-                        isrc
-                    }
+    def get_query(name: str):
+        with HTTPFileSystem().open(
+            (
+                'https://raw.githubusercontent.com/lipebol/datarized-core/'
+                f'refs/heads/main/spotifEx/querys/{name}'
+            ), 'rb'
+        ) as content:
+            query = content.read().decode()
+        return query
 
-                    ...on Errors {
-                        error
-                        message
-                        status_code
-                    }
-                }
-            }
-        """
-        )
+    @staticmethod
+    def set_query(query: str, trackid: str):
+        return Use.stringific({'arg': trackid.split('/')[-1]}, template=query)
