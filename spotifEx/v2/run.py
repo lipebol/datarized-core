@@ -1,17 +1,18 @@
 from asyncio import AbstractEventLoop, get_running_loop, run, run_coroutine_threadsafe
-from dbus import Array, Dictionary, SessionBus, String
-from dbus.mainloop.glib import DBusGMainLoop
+from common.databases import Config
 from common.notific import Notific
 from common.utilize import Use
 from concurrent.futures import Future
+from dbus import Array, Dictionary, SessionBus, String
+from dbus.mainloop.glib import DBusGMainLoop
 from gi.repository import GLib
-from common.databases import MongoDB
 from spotifEx.spotify_for_developers import WebAPI
 from threading import Thread
 
 
 class init:
 
+    Use.variable('SPOTIFY_WEB_API_QUERY', add=WebAPI.get_query('spotify-web-api'))
     Use.variable('DATARIZED_CORE_NAME', add='spotifEx')
  
     @staticmethod
@@ -59,7 +60,7 @@ class init:
 
     @staticmethod
     async def run():
-        if MongoDB.setconfig():
+        if Config.envs():
             Thread(
                 target=init.metadata, daemon=True,
                 args=((event_loop := get_running_loop()),)
