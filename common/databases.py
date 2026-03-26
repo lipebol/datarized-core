@@ -75,7 +75,7 @@ class PostgreSQL:
     @staticmethod
     def __connect(database: str | None):
         return adbc_driver_postgresql.dbapi.connect(
-            system.decr(value=Use.variable('POSTGRESQL_URI'))
+            Use.decr(content='postgresql-uri.jwe')
             .replace('postgres', PostgreSQL.getdbname(database)), autocommit=True
         ).cursor()
 
@@ -153,9 +153,7 @@ class MongoDB:
 
     @staticmethod
     def connect(database: str, collection: str):
-        if 'mongodb' not in (uri := Use.variable('MONGODB_URI')):
-            uri = Use.decr(value=uri)
-        return MongoClient(uri).get_database(
+        return MongoClient(Use.decr(content='mongodb-uri.jwe')).get_database(
             MongoDB.getdbname(database)
         ).get_collection(collection)
 
