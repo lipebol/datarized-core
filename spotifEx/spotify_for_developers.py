@@ -55,7 +55,8 @@ class WebAPI:
                 url='http://localhost/api/v2/graphql/',
                 headers={
                     'Content-Type': 'application/json',
-                    'AuthExternal': await WebAPI.token()
+                    'AuthExternal': await WebAPI.token(),
+                    'DatarizedCoreVersion': Use.variable('DATARIZED_CORE_VERSION')
                 }, client_session_args={'timeout': ClientTimeout(total=300)}
             )
         ) as session:
