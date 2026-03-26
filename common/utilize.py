@@ -1,5 +1,4 @@
 from datetime import datetime
-from dotenv import load_dotenv
 from inspect import getmodule
 from json import dump, dumps, load, loads
 from logging import basicConfig, info, INFO
@@ -16,8 +15,6 @@ from zipfile import ZipFile
 
 class Use:
 
-    load_dotenv()
-
     basicConfig(
         format='%(asctime)s - %(levelname)s - %(message)s', 
         level=INFO, datefmt='%Y-%m-%d %H:%M:%S'
@@ -33,7 +30,13 @@ class Use:
     @quiet
     @staticmethod
     def info(_info: str) -> str:
-        return info(f'{Use.variable('DATARIZED_CORE_NAME')} {_info}')
+        return info(
+            (
+                f'{Use.variable('DATARIZED_CORE_NAME')}'
+                f' {Use.variable('DATARIZED_CORE_VERSION')}:'
+                f' {_info} '
+            )
+        )
 
     @staticmethod
     def envs():
@@ -148,7 +151,7 @@ class Use:
             return run(
                 load_encr % {
                     'arg': content if not env else f'${content}',
-                    'tangserver': Use.variable('TANG_SERVER_IP') # set in '.env'
+                    'tangserver': Use.variable('FJH14E77TT22C4U4X')
                 }, shell=True, stdout=PIPE, text=True
             ).stdout.strip()
         raise Exception(load_encr)
