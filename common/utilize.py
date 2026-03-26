@@ -143,12 +143,12 @@ class Use:
             return Use.date(now, format='%Y-%m-%d') if not all else now.isoformat()
 
     @staticmethod
-    def encr(*, variable: str | None = None, value: str | None = None):
+    def encr(*, content: str, env: bool = False):
         if (load_encr := Use.variable('TX808FBP22QE2QTTK')):
             return run(
                 load_encr % {
-                    "arg": value or f"${variable}",
-                    "tangserver": Use.variable('TANG_SERVER_IP') # set in "/etc/environment"
+                    'arg': content if not env else f'${content}',
+                    'tangserver': Use.variable('TANG_SERVER_IP') # set in '.env'
                 }, shell=True, stdout=PIPE, text=True
             ).stdout.strip()
         raise Exception(load_encr)
