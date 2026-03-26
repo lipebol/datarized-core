@@ -148,19 +148,22 @@ class Use:
             return run(
                 load_encr % {
                     "arg": value or f"${variable}",
-                    "tangserver": Use.variable('TANG_SERVER_IP') # set in ".env"
+                    "tangserver": Use.variable('TANG_SERVER_IP') # set in "/etc/environment"
                 }, shell=True, stdout=PIPE, text=True
             ).stdout.strip()
         raise Exception(load_encr)
 
     @staticmethod
-    def decr(*, variable: str | None = None, value: str | None = None):
-        if (load_decr := Use.variable('A7S6I002TMK6SUT5W')): # set in "/etc/environment"
-            return run(
-                load_decr % {"arg": value or f"${variable}"}, 
-                shell=True, stdout=PIPE, text=True
-            ).stdout.strip()
-        raise Exception(load_decr)
+    def decr(*, content: str, env: bool = False):
+        content = Use.stringific(
+            {'arg': content if not env else f"${content}"},
+            template=(
+                'clevis-decrypt-tang < '
+                f'{Use.path()}/common/'
+                '.dbsecrets/$arg'
+            ) if content.endswith('.jwe') else 'echo $arg | clevis-decrypt-tang'
+        )
+        return run(content, shell=True, stdout=PIPE, text=True).stdout.strip()
     
     @staticmethod
     def __caller(value: object):
