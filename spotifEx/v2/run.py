@@ -1,5 +1,4 @@
 from asyncio import AbstractEventLoop, get_running_loop, run, run_coroutine_threadsafe
-from common.databases import Config
 from common.notific import Notific
 from common.utilize import Use
 from concurrent.futures import Future
@@ -11,9 +10,6 @@ from threading import Thread
 
 
 class init:
-
-    Use.variable('SPOTIFY_WEB_API_QUERY', add=WebAPI.get_query('spotify-web-api'))
-    Use.variable('DATARIZED_CORE_NAME', add='spotifEx')
  
     @staticmethod
     def metadata(event_loop: AbstractEventLoop):
@@ -60,13 +56,12 @@ class init:
 
     @staticmethod
     async def run():
-        if Config.envs():
-            Thread(
-                target=init.metadata, daemon=True,
-                args=((event_loop := get_running_loop()),)
-            ).start()
+        Thread(
+            target=init.metadata, daemon=True,
+            args=((event_loop := get_running_loop()),)
+        ).start()
 
-            await event_loop.create_future()
+        await event_loop.create_future()
 
 
 if __name__ == '__main__':
