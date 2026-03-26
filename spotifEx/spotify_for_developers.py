@@ -30,8 +30,8 @@ class WebAPI:
                 async with session.post(
                     spotify_web_api_object.get('get_token'), data={
                         **(spotify_web_api_params := spotify_web_api_object.get('params')), 
-                        "client_id": Use.decr(value=spotify_web_api_params.get('client_id')),
-                        "client_secret": Use.decr(value=spotify_web_api_params.get('client_secret'))
+                        "client_id": Use.decr(content=spotify_web_api_params.get('client_id')),
+                        "client_secret": Use.decr(content=spotify_web_api_params.get('client_secret'))
                     }
                 ) as response:
                     spotify_web_api_token = await response.json()
@@ -41,7 +41,7 @@ class WebAPI:
             tmpfile_data['SPOTIFY_WEB_API_OBJECT'] = Use.jsonific(
                 data={
                     **spotify_web_api_object, 'created_at': Use.now(),
-                    'token': (spotify_web_api_token := Use.encr(value=spotify_web_api_token))
+                    'token': (spotify_web_api_token := Use.encr(content=spotify_web_api_token))
                 }, to_string=True
             )
             Use.jsonific(path=tmpfile, data=tmpfile_data)
