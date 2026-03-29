@@ -1,4 +1,4 @@
-from common.databases import Config
+from common.storage import Config
 
 Config.envs()
 
