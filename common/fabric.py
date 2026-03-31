@@ -327,9 +327,14 @@ class Make:
                     classname = ''.join(classes.keys())
                     break
         if (data := globals()[classname](**kwargs)):
-            if 'Arrow_Flight' or 'Track_v2' in classname:
+            if 'Arrow_Flight' in classname:
                 return data
             return asdict(data)
+
+    @staticmethod
+    def schema(classname: str):
+        if (build := globals()[classname]()):
+            return build.schema
         
         
         
