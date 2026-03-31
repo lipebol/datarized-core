@@ -2,9 +2,7 @@ from .utilize import Use
 from dataclasses import asdict, dataclass, field as dataclassfield
 from inspect import getmembers, isclass, signature
 from pyarrow import _flight, binary, DataType, dictionary, field, list_, schema, Schema, struct
-import pyarrow
 from sys import modules
-
 
 # 'int' (signed) instead of 'uint' (unsigned) for dictionary indices.
 # 'fixed_size_binary[22]' for Spotify IDs to eliminate offset overhead.
