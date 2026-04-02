@@ -2,7 +2,7 @@ from datetime import datetime
 from inspect import getmodule
 from json import dump, dumps, load, loads
 from logging import basicConfig, info, INFO
-from os import environ, getenv, path, remove
+from os import environ, fsync, getenv, path, remove
 from pathlib import Path
 import pyarrow as arrow
 import pyarrow.dataset as arrow_dataset
@@ -82,19 +82,27 @@ class Use:
     @staticmethod
     def jsonific(
         *, path: str | None = None, data: str | dict | None = None, 
-        to_string: bool = False, to_objectpy: bool = False
+        to_string: bool = False, to_objectpy: bool = False,
+        jsonl: bool = False
     ):
-        if not path and data:
-            if to_string:
-                data = dumps(data)
-            if to_objectpy:
-                data = loads(data)
-            return data
         if path:
             with open(path, 'w' if data else 'r', encoding='utf-8') as jsonific:
                 if not data:
                     return load(jsonific)
                 dump(data, jsonific, ensure_ascii=False, indent=5)
+        elif jsonl:
+            with open(Use.walfile(), 'a', encoding='utf-8') as jsonific:
+                data = dumps({'created_at': Use.now(), 'content': data}, ensure_ascii=False)
+                jsonific.write(data + '\n')
+                jsonific.flush()
+                fsync(jsonific.fileno())
+        elif data:
+            if to_string:
+                data = dumps(data)
+            if to_objectpy:
+                data = loads(data)
+            return data
+
 
     @staticmethod
     def unzip(zip_file: object, suffix=None) -> str:
@@ -128,6 +136,15 @@ class Use:
     @staticmethod
     def tmpfile(*, path: str, filename: str | None = None) -> str:
         return Use.path(path, join='tmp.json' if not filename else f'{filename}.json')
+
+    @staticmethod
+    def walfile(*, id: bool = False) -> str:
+        return Use.path(
+            Use.path(), join=[
+                'common', '.wal', Use.variable('DATARIZED_CORE_NAME'),
+                '.log_data' if not id else '.log_id', f'{Use.now(all=False)}'
+            ]
+        )
 
     @staticmethod
     def timezone_default(timezone: str | None = None) -> str:
