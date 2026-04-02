@@ -62,7 +62,11 @@ class WebAPI:
         ) as session:
             try:
                 track = await session.execute(
-                    gql(WebAPI.set_query(Use.variable('SPOTIFY_WEB_API_QUERY'), trackid))
+                    gql(
+                        Use.stringific(
+                            {'arg': trackid}, template=Use.variable('SPOTIFY_WEB_API_QUERY')
+                        )
+                    )
                 )
                 if not (track := track.get('SpotifyWebAPI')):
                     raise Exception('There was probably an error during the track search.')
@@ -81,6 +85,3 @@ class WebAPI:
             query = content.read().decode()
         return query
 
-    @staticmethod
-    def set_query(query: str, trackid: str):
-        return Use.stringific({'arg': trackid.split('/')[-1]}, template=query)
