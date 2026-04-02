@@ -18,6 +18,8 @@ class init:
     @staticmethod
     def add_log_id(trackid: str):
         with init._lock:
+            if Use.start_date != (new_date := Use.now(all=False)):
+                Use.start_date, Use.log_id = new_date, set()
             if trackid not in Use.log_id:
                 Use.log_id.add(trackid)
                 with open(Use.walfile(id=True), 'a') as file:
@@ -70,6 +72,7 @@ class init:
 
     @staticmethod
     async def run():
+        Use.info(Use.log_id)
         Thread(
             target=init.metadata, daemon=True,
             args=((event_loop := get_running_loop()),)
