@@ -62,11 +62,7 @@ class WebAPI:
         ) as session:
             try:
                 track = await session.execute(
-                    gql(
-                        Use.stringific(
-                            {'arg': trackid}, template=Use.variable('SPOTIFY_WEB_API_QUERY')
-                        )
-                    )
+                    gql(Use.stringific({'arg': trackid}, template=Use.spotify_web_api))
                 )
                 if not (track := track.get('SpotifyWebAPI')):
                     raise Exception('There was probably an error during the track search.')
