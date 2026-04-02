@@ -1,7 +1,6 @@
 from aiohttp import ClientSession, ClientTimeout
 from common.utilize import Use
 from common.notific import Notific
-from fsspec.implementations.http import HTTPFileSystem
 from gql import Client, gql
 from gql.transport.aiohttp import AIOHTTPTransport
 
@@ -70,14 +69,4 @@ class WebAPI:
             except Exception as error:
                 return Notific.exception(error)
 
-    @staticmethod
-    def get_query(name: str):
-        with HTTPFileSystem().open(
-            (
-                'https://raw.githubusercontent.com/lipebol/datarized-core/'
-                f'refs/heads/main/spotifEx/querys/{name}'
-            ), 'rb'
-        ) as content:
-            query = content.read().decode()
-        return query
 
