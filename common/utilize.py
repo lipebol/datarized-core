@@ -142,7 +142,7 @@ class Use:
         return Use.path(
             Use.path(), join=[
                 'common', '.wal', Use.variable('DATARIZED_CORE_NAME'),
-                '.log_data' if not id else '.log_id', f'{Use.now(all=False)}'
+                '.log_data' if not id else '.log_id', f'{Use.start_date}'
             ]
         )
 
