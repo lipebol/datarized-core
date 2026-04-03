@@ -40,15 +40,13 @@ class init:
             changed_properties: Dictionary, 
             invalidated_properties: Array
         ):
-            if not 'PlaybackStatus' in str(changed_properties):
-                if not (
-                    metadata := Use.jsonific(
-                        data=changed_properties, to_string=True, 
-                        to_objectpy=True
-                    ).get('Metadata')
-                ):
+            changed_properties = Use.jsonific(
+                data=changed_properties, to_string=True, to_objectpy=True
+            )
+            if not changed_properties.get('PlaybackStatus'):
+                if not (metadata := changed_properties.get('Metadata')):
                     raise Exception('There was probably an error connecting to DBUS.')
-                if '/com/spotify/ad/' not in (trackid := metadata.get('mpris:trackid')):
+                elif '/com/spotify/ad/' not in (trackid := metadata.get('mpris:trackid')):
                     if init.add_log_id((trackid := trackid.split('/')[-1])):
                         run_coroutine_threadsafe(
                             WebAPI.access(trackid), event_loop
