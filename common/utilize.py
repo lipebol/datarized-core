@@ -3,9 +3,10 @@ from inspect import getmodule
 from json import dump, dumps, load, loads
 from logging import basicConfig, info, INFO
 from os import environ, fsync, getenv, path, remove
-from pathlib import Path
+from pathlib import Path, PosixPath
 import pyarrow as arrow
-import pyarrow.dataset as arrow_dataset
+from pyarrow import json
+import pyarrow.dataset as arrowdataset
 from pytz import timezone
 from string import Template
 from subprocess import run, PIPE
@@ -85,17 +86,19 @@ class Use:
         to_string: bool = False, to_objectpy: bool = False,
         jsonl: bool = False
     ):
-        if path:
-            with open(path, 'w' if data else 'r', encoding='utf-8') as jsonific:
-                if not data:
-                    return load(jsonific)
-                dump(data, jsonific, ensure_ascii=False, indent=5)
-        elif jsonl:
+        if jsonl:
+            if path:
+                return json.read_json(path)
             with open(Use.walfile(), 'a', encoding='utf-8') as jsonific:
                 data = dumps({'created_at': Use.now(), 'content': data}, ensure_ascii=False)
                 jsonific.write(data + '\n')
                 jsonific.flush()
                 fsync(jsonific.fileno())
+        elif path:
+            with open(path, 'w' if data else 'r', encoding='utf-8') as jsonific:
+                if not data:
+                    return load(jsonific)
+                dump(data, jsonific, ensure_ascii=False, indent=5)
         elif data:
             if to_string:
                 data = dumps(data)
@@ -116,7 +119,7 @@ class Use:
             return zip_obj.extractall(zip_file.parent)
 
     @staticmethod
-    def read_csv(csv_file: str, fields: list, types: dict, sep=None) -> object:
+    def read_csv(csv_file: str, fields: list, types: dict, sep=None) -> arrow.Table:
         Use.info(f"Reading file... ({csv_file})")
         return arrow.csv.read_csv(
             csv_file, parse_options=arrow.csv.ParseOptions(delimiter=sep if sep else ';'),
@@ -126,19 +129,22 @@ class Use:
         )
 
     @staticmethod
-    def dataset(datafile, *, typefile: str, fs: object, types: list | None = None, batch: bool = False):
+    def dataset(
+        datafile, *, typefile: str, fs: object,
+        types: list | None = None, batch: bool = False
+    ) -> arrow.dataset.Dataset:
         Use.info(f"Reading file... ({datafile})")
-        if (dataset := arrow_dataset.dataset(datafile, schema=types, format=typefile, filesystem=fs)):
+        if (dataset := arrowdataset.dataset(datafile, schema=types, format=typefile, filesystem=fs)):
             if batch:
                 return
             return dataset.to_table() 
 
     @staticmethod
-    def tmpfile(*, path: str, filename: str | None = None) -> str:
+    def tmpfile(*, path: str, filename: str | None = None) -> PosixPath:
         return Use.path(path, join='tmp.json' if not filename else f'{filename}.json')
 
     @staticmethod
-    def walfile(*, id: bool = False) -> str:
+    def walfile(*, id: bool = False) -> PosixPath:
         return Use.path(
             Use.path(), join=[
                 'common', '.wal', Use.variable('DATARIZED_CORE_NAME'),
@@ -163,7 +169,7 @@ class Use:
             return Use.date(now, format='%Y-%m-%d') if not all else now.isoformat()
 
     @staticmethod
-    def encr(*, content: str, env: bool = False):
+    def encr(*, content: str, env: bool = False) -> str:
         if (load_encr := Use.variable('TX808FBP22QE2QTTK')):
             return run(
                 load_encr % {
@@ -174,7 +180,7 @@ class Use:
         raise Exception(load_encr)
 
     @staticmethod
-    def decr(*, content: str, env: bool = False):
+    def decr(*, content: str, env: bool = False) -> str:
         content = Use.stringific(
             {'arg': content if not env else f"${content}"},
             template=(
