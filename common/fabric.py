@@ -73,7 +73,7 @@ class Album_v2:
                 }
             ),
             field(
-                'release_date', 'string', nullable=False, metadata={
+                'release_date', 'date32', nullable=False, metadata={
                     'release_date': 'The official day the music was made available to the public.'
                 }
             ),
@@ -174,72 +174,74 @@ class Artist_v2:
 class Track_v2:
     schema: Schema = dataclassfield(
         default_factory=lambda: schema([
+            field('created_at', 'string', nullable=False, metadata={'created_at': ''}),
             field(
-                'trackid', binary(22), nullable=False, metadata={
-                    'trackid': 'A unique alphanumeric identifier for the specific song.'
+                'track.trackid', binary(22), nullable=False, metadata={
+                    'track.trackid': 'A unique alphanumeric identifier for the specific song.'
                 }
             ),
             field(
-                'name', 'string', nullable=False, metadata={
-                    'name': 'The official title of the track.'
+                'track.name', 'string', nullable=False, metadata={
+                    'track.name': 'The official title of the track.'
                 }
             ),
             field(
-                'album', Album_v2().struct, metadata={
-                    'album': (
+                'track.album', Album_v2().struct, metadata={
+                    'track.album': (
                         'Comprehensive details about the music collection containing this '
                         'track, including its title, artwork, and legal publishing information.'
                     )
                 }
             ),
-            field('artists', list_(Artist_v2().struct), metadata={'artists': ''}),
+            field('track.artists', list_(Artist_v2().struct), metadata={'track.artists': ''}),
             field(
-                'url', 'string', nullable=False, metadata={
-                    'url': 'A direct link to stream or view the track on the platform.'
+                'track.url', 'string', nullable=False, metadata={
+                    'track.url': 'A direct link to stream or view the track on the platform.'
                 }
             ),
             field(
-                'duration_ms', 'uint32', nullable=False, metadata={
-                    'duration_ms': 'The total length of the song measured in milliseconds.'
+                'track.duration_ms', 'uint32', nullable=False, metadata={
+                    'track.duration_ms': 'The total length of the song measured in milliseconds.'
                 }
             ),
             field(
-                'popularity', 'uint8', nullable=False, metadata={
-                    'popularity': (
+                'track.popularity', 'uint8', nullable=False, metadata={
+                    'track.popularity': (
                         'A score (usually 0-100) indicating how trending or widely '
                         'streamed the song is.'
                     )
                 }
             ),
             field(
-                'explicit', 'bool', nullable=False, metadata={
-                    'explicit': (
+                'track.explicit', 'bool', nullable=False, metadata={
+                    'track.explicit': (
                         'A true/false flag indicating if the lyrics '
                         'contain adult content.'
                     )
                 }
             ),
             field(
-                'track_number', 'uint8', nullable=False, metadata={
-                    'track_number': 'The position of the song within the album\'s tracklist.'
+                'track.track_number', 'uint8', nullable=False, metadata={
+                    'track.track_number': 'The position of the song within the album\'s tracklist.'
                 }
             ),
             field(
-                'disc_number', 'uint8', nullable=False, metadata={
-                    'disc_number': (
+                'track.disc_number', 'uint8', nullable=False, metadata={
+                    'track.disc_number': (
                         'The volume or disc index (usually "1" unless '
                         'it\'s a multi-disc set).'
                     )
                 }
             ),
             field(
-                'isrc', 'string', nullable=False, metadata={
-                    'isrc': (
+                'track.isrc', 'string', nullable=False, metadata={
+                    'track.isrc': (
                         'The International Standard Recording Code, a unique '
                         '"serial number" for the specific sound recording.'
                     )
                 }
-            )
+            ),
+            field('track.listen', 'uint8', nullable=False, metadata={'track.listen': ''})
         ])
     )
 
@@ -336,5 +338,8 @@ class Make:
         if (build := globals()[classname]()):
             return build.schema
         
-        
+    @staticmethod
+    def datatype(classname: str):
+        if (build := globals()[classname]()):
+            return build.datatype
         
