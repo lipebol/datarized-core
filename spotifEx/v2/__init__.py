@@ -1,3 +1,4 @@
+from common.fabric import Make
 from common.storage import Stor
 from common.utilize import Use
 from fsspec.implementations.http import HTTPFileSystem
@@ -13,6 +14,7 @@ with HTTPFileSystem().open(
 ) as content:
     setattr(Use, 'spotify_web_api', content.read().decode())
 
+setattr(Use, 'arrow_schema', Make.schema('Track_v2'))
 setattr(Use, 'start_date', Use.now(all=False))
 setattr(Use, 'log_id', set())
 
