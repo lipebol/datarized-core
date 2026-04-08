@@ -17,12 +17,12 @@ class Images_v2:
                 }
             ),
             field(
-                'width', dictionary('int8', 'uint16'), nullable=False, metadata={
+                'width', 'uint16', nullable=False, metadata={
                     'width': 'The horizontal measurement of the image in pixels.'
                 }
             ),
             field(
-                'height', dictionary('int8', 'uint16'), nullable=False, metadata={
+                'height', 'uint16', nullable=False, metadata={
                     'height': 'The vertical measurement of the image in pixels.'
                 }
             )
@@ -69,17 +69,23 @@ class Album_v2:
             ),
             field(
                 'album_type', dictionary('int8', 'string'), nullable=False, metadata={
-                    'album_type': 'Defines if the release is a full "album" an "EP" or a "single".'
+                    'album_type': (
+                        'Defines if the release is a full "album" an "EP" or a "single".'
+                    )
                 }
             ),
             field(
                 'release_date', 'date32', nullable=False, metadata={
-                    'release_date': 'The official day the music was made available to the public.'
+                    'release_date': (
+                        'The official day the music was made available to the public.'
+                    )
                 }
             ),
             field(
                 'external_url', 'string', nullable=False, metadata={
-                    'external_url': 'A direct link to stream or view the album on the platform.'
+                    'external_url': (
+                        'A direct link to stream or view the album on the platform.'
+                    )
                 }
             ),
             field(
@@ -174,10 +180,21 @@ class Artist_v2:
 class Track_v2:
     schema: Schema = dataclassfield(
         default_factory=lambda: schema([
-            field('created_at', 'string', nullable=False, metadata={'created_at': ''}),
+            field(
+                'created_date', 'date32', nullable=False, metadata={
+                    'created_date': 'Indicates the date the record was created.'
+                }
+            ),
+            field(
+                'created_time', 'uint8', nullable=False, metadata={
+                    'created_time': 'Indicates the hour the record was created.'
+                }
+            ),
             field(
                 'track.trackid', binary(22), nullable=False, metadata={
-                    'track.trackid': 'A unique alphanumeric identifier for the specific song.'
+                    'track.trackid': (
+                        'A unique alphanumeric identifier for the specific song.'
+                    )
                 }
             ),
             field(
@@ -188,20 +205,31 @@ class Track_v2:
             field(
                 'track.album', Album_v2().struct, metadata={
                     'track.album': (
-                        'Comprehensive details about the music collection containing this '
-                        'track, including its title, artwork, and legal publishing information.'
+                        'Comprehensive details about the music collection containing ' 
+                        'this track, including its title, artwork, and legal publishing '
+                        'information.'
                     )
                 }
             ),
-            field('track.artists', list_(Artist_v2().struct), metadata={'track.artists': ''}),
+            field(
+                'track.artists', list_(Artist_v2().struct), metadata={
+                    'track.artists': (
+                        'The artist or list of artists who contributed to the track.'
+                    )
+                }
+            ),
             field(
                 'track.url', 'string', nullable=False, metadata={
-                    'track.url': 'A direct link to stream or view the track on the platform.'
+                    'track.url': (
+                        'A direct link to stream or view the track on the platform.'
+                    )
                 }
             ),
             field(
                 'track.duration_ms', 'uint32', nullable=False, metadata={
-                    'track.duration_ms': 'The total length of the song measured in milliseconds.'
+                    'track.duration_ms': (
+                        'The total length of the song measured in milliseconds.'
+                    )
                 }
             ),
             field(
@@ -222,7 +250,9 @@ class Track_v2:
             ),
             field(
                 'track.track_number', 'uint8', nullable=False, metadata={
-                    'track.track_number': 'The position of the song within the album\'s tracklist.'
+                    'track.track_number': (
+                        'The position of the song within the album\'s tracklist.'
+                    )
                 }
             ),
             field(
@@ -241,7 +271,14 @@ class Track_v2:
                     )
                 }
             ),
-            field('track.listen', 'uint8', nullable=False, metadata={'track.listen': ''})
+            field(
+                'track.listen', 'uint8', nullable=False, metadata={
+                    'track.listen': (
+                        'The total play count for the track, representing how '
+                        'many times it has been streamed.'
+                    )
+                }
+            )
         ])
     )
 
