@@ -4,9 +4,9 @@ from json import dump, dumps, load, loads
 from logging import basicConfig, info, INFO
 from os import environ, fsync, getenv, path, remove
 from pathlib import Path, PosixPath
-import pyarrow as arrow
+import pyarrow as Arrow
 from pyarrow import json
-import pyarrow.dataset as arrowdataset
+import pyarrow.dataset as ArrowDataset
 from pytz import timezone
 from string import Template
 from subprocess import run, PIPE
@@ -89,11 +89,11 @@ class Use:
         if jsonl:
             if path:
                 return json.read_json(path)
-            with open(Use.walfile(), 'a', encoding='utf-8') as jsonific:
-                data = dumps({'created_at': Use.now(), 'content': data}, ensure_ascii=False)
-                jsonific.write(data + '\n')
-                jsonific.flush()
-                fsync(jsonific.fileno())
+            elif data:
+                with open(Use.walfile(), 'a', encoding='utf-8') as jsonific:
+                    jsonific.write(dumps(data, ensure_ascii=False) + '\n')
+                    jsonific.flush()
+                    fsync(jsonific.fileno())
         elif path:
             with open(path, 'w' if data else 'r', encoding='utf-8') as jsonific:
                 if not data:
@@ -105,7 +105,6 @@ class Use:
             if to_objectpy:
                 data = loads(data)
             return data
-
 
     @staticmethod
     def unzip(zip_file: object, suffix=None) -> str:
@@ -119,22 +118,26 @@ class Use:
             return zip_obj.extractall(zip_file.parent)
 
     @staticmethod
-    def read_csv(csv_file: str, fields: list, types: dict, sep=None) -> arrow.Table:
+    def read_csv(csv_file: str, fields: list, types: dict, sep=None) -> Arrow.Table:
         Use.info(f"Reading file... ({csv_file})")
-        return arrow.csv.read_csv(
-            csv_file, parse_options=arrow.csv.ParseOptions(delimiter=sep if sep else ';'),
-            read_options=arrow.csv.ReadOptions(
+        return Arrow.csv.read_csv(
+            csv_file, parse_options=Arrow.csv.ParseOptions(delimiter=sep if sep else ';'),
+            read_options=Arrow.csv.ReadOptions(
                 encoding='latin1', column_names=fields, skip_rows=1
-            ), convert_options=arrow.csv.ConvertOptions(column_types=types)
+            ), convert_options=Arrow.csv.ConvertOptions(column_types=types)
         )
 
     @staticmethod
     def dataset(
         datafile, *, typefile: str, fs: object,
         types: list | None = None, batch: bool = False
-    ) -> arrow.dataset.Dataset:
+    ) -> Arrow.dataset.Dataset:
         Use.info(f"Reading file... ({datafile})")
-        if (dataset := arrowdataset.dataset(datafile, schema=types, format=typefile, filesystem=fs)):
+        if (
+            dataset := ArrowDataset.dataset(
+                datafile, schema=types, format=typefile, filesystem=fs
+            )
+        ):
             if batch:
                 return
             return dataset.to_table() 
@@ -194,5 +197,3 @@ class Use:
     @staticmethod
     def __caller(value: object):
         return Use.path(path.dirname(getmodule(value).__file__)).name
-
-    
