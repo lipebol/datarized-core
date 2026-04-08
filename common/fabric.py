@@ -4,6 +4,13 @@ from inspect import getmembers, isclass, signature
 from pyarrow import _flight, binary, DataType, dictionary, field, list_, schema, Schema, struct
 from sys import modules
 
+
+@dataclass
+class spotifExWAL:
+    created_date: str
+    created_time: str
+    track: dict = dataclassfield(default_factory=dict)
+
 # 'int' (signed) instead of 'uint' (unsigned) for dictionary indices.
 # 'fixed_size_binary[22]' for Spotify IDs to eliminate offset overhead.
 
@@ -379,4 +386,3 @@ class Make:
     def datatype(classname: str):
         if (build := globals()[classname]()):
             return build.datatype
-        
