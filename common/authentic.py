@@ -14,16 +14,16 @@ class Auth:
     ) -> object:
         if _auth and _scope:
             _auth = service_account.Credentials.from_service_account_info(
-                Use.jsonific(data=Use.decr(variable=_auth), to_objectpy=True), 
-                scopes=[Use.decr(variable=_scope)]
+                Use.jsonific(data=Use.decr(content=_auth, env=True), to_objectpy=True),
+                scopes=[Use.decr(content=_scope, env=True)]
             )
         elif _authkey:
-            _authkey = Use.decr(variable=_authkey)
+            _authkey = Use.decr(content=_authkey, env=True)
         return build(name, version, developerKey=_authkey, credentials=_auth, cache_discovery=False)
 
     @staticmethod
     def arrow_flight_rpc(uri: str, **kwargs):
-        if (uri := urlparse(Use.decr(value=uri))) and (
+        if (uri := urlparse(Use.decr(content=uri))) and (
             client := flight.FlightClient(f"{uri.scheme}://{uri.hostname}:{uri.port}")
         ) and (
             authenticate := flight.FlightCallOptions(
