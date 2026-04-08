@@ -1,6 +1,9 @@
 from .authentic import Auth
+from .notific import Notific
 from .utilize import Use
 import adbc_driver_postgresql.dbapi
+import pyarrow.dataset as ArrowDataset
+from pyarrow.fs import FileSelector, S3FileSystem
 from pyarrow import Table
 from pymongo import MongoClient
 
@@ -9,7 +12,7 @@ class ClickHouse:
 
     @staticmethod
     def setconfig(database: str | None = None):
-        Config.setdbname('CLICKHOUSE_DB', database)
+        Config.storage('CLICKHOUSE_DB', database)
         return Config.envs()
 
     @staticmethod
@@ -63,7 +66,7 @@ class PostgreSQL:
 
     @staticmethod
     def setconfig(database: str | None = None):
-        Config.setdbname('POSTGRESQL_DB', database)
+        Config.storage('POSTGRESQL_DB', database)
         return Config.envs()
 
     @staticmethod
@@ -142,7 +145,7 @@ class MongoDB:
 
     @staticmethod
     def setconfig():
-        Config.setdbname('MONGODB_DB', Use.variable('DATARIZED_CORE_NAME'))
+        Config.storage('MONGODB_DB', Use.variable('DATARIZED_CORE_NAME'))
         return Config.envs()
 
     @staticmethod
@@ -175,14 +178,58 @@ class MongoDB:
     def insert(collection: str, *, database: str | None = None, data: dict, many: bool = False):
         if not many:
             return MongoDB.connect(database, collection).insert_one(data).inserted_id
+
+
+class Stor:
+
+    @staticmethod
+    def setconfig():
+        Config.storage('STOR_BUCKET', Use.variable('DATARIZED_CORE_NAME').lower())
+        return Config.envs()
+
+    @staticmethod
+    def getbucketname(bucket: str | None) -> str:
+        if (bucket := bucket or f'{Use.variable('STOR_BUCKET')}/'):
+            return bucket
+        raise Exception('The bucket was not declared.')
+
+    @staticmethod
+    def connect():
+        endpoint, access_key, secret_key = Use.decr(content='s3.jwe').split(' ')
+        return S3FileSystem(
+            access_key=access_key, secret_key=secret_key, endpoint_override=endpoint
+        )
+
+    @staticmethod
+    def list_objects(bucket: str | None = None):
+        return Stor.connect().get_file_info(
+            FileSelector(Stor.getbucketname(bucket), recursive=True)
+        )
+
+    @staticmethod
+    def insert(
+        data: Table, *, bucket: str | None = None,
+        typefile: str = 'parquet',
+        partition: list | None = None
+    ):
+        try:
+            ArrowDataset.write_dataset(
+                data, Stor.getbucketname(bucket), format=typefile,
+                partitioning=partition, filesystem=Stor.connect(),
+                existing_data_behavior='delete_matching'
+            )
+            Use.info('Saved Successfully!')
+            Use.info(f'List Objects: {Stor.list_objects()}')
+        except Exception as error:
+            Notific.exception(error)
     
 
 class Config:
 
     @staticmethod
-    def setdbname(env: str, database: str | None) -> list:
-        if database:
-            return Use.variable(env, add=database)
+    def storage(env: str, storage: str | None) -> list:
+        if storage:
+            return Use.variable(env, add=storage)
 
     @staticmethod
     def envs():
