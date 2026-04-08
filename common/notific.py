@@ -8,7 +8,7 @@ from traceback import format_exc
 class Notific:
 
     @staticmethod
-    def exception(error):
+    def exception(error: Exception):
         try:
             Notific.alert(
                 title=(name := Use.variable('DATARIZED_CORE_NAME')),
@@ -17,10 +17,9 @@ class Notific:
                     description=format_exc(), colorId='11'
                 ).get('kind')
             )
-            return (error := {'error': error})
+            Use.info(error)
         except Exception:
             Notific.alert(title='Notific', message=format_exc())
-            return error
     
     @staticmethod
     def event(
@@ -31,7 +30,7 @@ class Notific:
             name='calendar', version='v3', _auth=Use.variable('NOTIFIC_AUTH'), 
             _scope=Use.variable('NOTIFIC_SCOPE')
         ).events().insert(
-            calendarId=Use.decr(variable=Use.variable('NOTIFIC_ID')), 
+            calendarId=Use.decr(content=Use.variable('NOTIFIC_ID'), env=True),
             body=Make.data(
                 summary=summary, description=description, 
                 colorId=colorId, start=date, end=date
