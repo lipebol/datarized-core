@@ -5,6 +5,12 @@ from fsspec.implementations.http import HTTPFileSystem
 
 Use.variable('DATARIZED_CORE_NAME', add='spotifEx')
 Use.variable('DATARIZED_CORE_VERSION', add='v2')
+Use.variable(
+    'TIMER_MESSAGE', add=(
+        'Process Scheduled! Execution in '
+        '~$h hour(s) and $m minute(s).'
+    )
+)
 
 with HTTPFileSystem().open(
     (
