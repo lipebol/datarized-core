@@ -160,8 +160,10 @@ class Use:
         return 'America/Sao_Paulo' if not timezone else timezone
 
     @staticmethod
-    def date(value: str | datetime, *, format: str = '%Y-%m-%dT%H:%M:%S.%f%z'):
-        if isinstance(value, (str, datetime)):
+    def date(
+        value: datetime | str, *, format: str = '%Y-%m-%dT%H:%M:%S.%f%z'
+    ) -> datetime | str:
+        if isinstance(value, (datetime, str)):
             return datetime.strptime(
                 value, format
             ) if isinstance(value, str) else value.strftime(format)
