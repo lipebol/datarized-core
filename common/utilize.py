@@ -5,6 +5,7 @@ from logging import basicConfig, info, INFO
 from os import environ, fsync, getenv, path, remove
 from pathlib import Path, PosixPath
 import pyarrow as Arrow
+from pyarrow import csv
 from pyarrow import json
 import pyarrow.dataset as ArrowDataset
 from pytz import timezone
@@ -120,11 +121,11 @@ class Use:
     @staticmethod
     def read_csv(csv_file: str, fields: list, types: dict, sep=None) -> Arrow.Table:
         Use.info(f"Reading file... ({csv_file})")
-        return Arrow.csv.read_csv(
-            csv_file, parse_options=Arrow.csv.ParseOptions(delimiter=sep if sep else ';'),
-            read_options=Arrow.csv.ReadOptions(
+        return csv.read_csv(
+            csv_file, parse_options=csv.ParseOptions(delimiter=sep if sep else ';'),
+            read_options=csv.ReadOptions(
                 encoding='latin1', column_names=fields, skip_rows=1
-            ), convert_options=Arrow.csv.ConvertOptions(column_types=types)
+            ), convert_options=csv.ConvertOptions(column_types=types)
         )
 
     @staticmethod
