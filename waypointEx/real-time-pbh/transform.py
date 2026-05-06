@@ -8,8 +8,9 @@ csv_file = Use.read_csv(
         (dir_files := Use.path(Use.this_path, join=['files'])), 
         join='bus-routes.csv'
     ), 
-    ['bus_id', 'bus_line', 'bus_route'], {
-        'bus_id': string(), 'bus_line': string(), 'bus_route': string()
+    ['Identificador', 'Linha', 'Itinerario', 'Categoria'], {
+        'Identificador': string(), 'Linha': string(),
+        'Itinerario': string(), 'Categoria': string()
     }
 )
 
